@@ -5,13 +5,18 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Runtime.CompilerServices;
 
-namespace PaintDotNet.Imaging
+namespace PaintDotNet
 {
-    public enum BitmapLockOptions
+    public static class ObjectUtil
     {
-        Read = 1,
-        Write = 2,
-        ReadWrite = Read | Write
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Swap<T>(ref T a, ref T b)
+        {
+            T temp = a;
+            a = b;
+            b = temp;
+        }
     }
 }

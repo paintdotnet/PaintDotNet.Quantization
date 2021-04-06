@@ -5,13 +5,21 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace PaintDotNet.Imaging
+namespace PaintDotNet.Collections
 {
-    public enum BitmapLockOptions
+    public static class EnumerableExtensions
     {
-        Read = 1,
-        Write = 2,
-        ReadWrite = Read | Write
+        public static IEnumerable<T> Concat<T>(this IEnumerable<T> list, T tail)
+        {
+            foreach (T item in list)
+            {
+                yield return item;
+            }
+
+            yield return tail;
+        }
     }
 }

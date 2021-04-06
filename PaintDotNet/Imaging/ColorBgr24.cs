@@ -1,4 +1,10 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -118,10 +124,10 @@ namespace PaintDotNet.Imaging
             return "#" + this.Bgr.ToString("X6");
         }
 
-        PixelFormat INaturalPixelInfo.PixelFormat => PixelFormat.Bgr24;
-
-        int INaturalPixelInfo.BytesPerPixel => 3;
+        PixelFormat IPixelInfo.PixelFormat => PixelFormat.Bgr24;
 
         int IPixelInfo.BitsPerPixel => 24;
+
+        int INaturalPixelInfo.BytesPerPixel => 3;
     }
 }

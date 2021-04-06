@@ -4,28 +4,30 @@
 // All Rights Reserved.                                                        //
 /////////////////////////////////////////////////////////////////////////////////
 
-using PaintDotNet.Rendering;
 using System;
 
-namespace PaintDotNet.Imaging
+namespace PaintDotNet
 {
-    public unsafe interface IBitmapLock<TPixel>
-        : IDisposable
-          where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+    public class InternalErrorException
+        : Exception
     {
-        SizeInt32 Size
+        public InternalErrorException()
         {
-            get;
         }
 
-        TPixel* Buffer
+        public InternalErrorException(string message)
+            : base(message)
         {
-            get;
         }
 
-        int Stride
+        public InternalErrorException(Exception innerException)
+            : this(null, innerException)
         {
-            get;
+        }
+
+        public InternalErrorException(string message, Exception innerException)
+            : base(message, innerException)
+        {
         }
     }
 }

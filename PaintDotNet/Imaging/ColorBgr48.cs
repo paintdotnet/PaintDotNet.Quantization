@@ -4,6 +4,12 @@
 // All Rights Reserved.                                                        //
 /////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
 using System;
 using System.Runtime.InteropServices;
 
@@ -113,10 +119,10 @@ namespace PaintDotNet.Imaging
             return this.Bgr.GetHashCode();
         }
 
-        PixelFormat INaturalPixelInfo.PixelFormat => PixelFormat.Bgr48;
-
-        int INaturalPixelInfo.BytesPerPixel => 6;
+        PixelFormat IPixelInfo.PixelFormat => PixelFormat.Bgr48;
 
         int IPixelInfo.BitsPerPixel => 48;
+
+        int INaturalPixelInfo.BytesPerPixel => 6;
     }
 }

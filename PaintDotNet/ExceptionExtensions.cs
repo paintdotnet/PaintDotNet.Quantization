@@ -4,17 +4,26 @@
 // All Rights Reserved.                                                        //
 /////////////////////////////////////////////////////////////////////////////////
 
-using PaintDotNet.Rendering;
 using System;
 
-namespace PaintDotNet.Imaging
+namespace PaintDotNet
 {
-    public static class BitmapExtensions
+    public static class ExceptionExtensions
     {
-        public static IBitmapLock<TPixel> Lock<TPixel>(this IBitmap<TPixel> bitmap, BitmapLockOptions options)
-            where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+        public static bool IsOperationCanceled(this Exception ex)
         {
-            return bitmap.Lock(new RectInt32(Point2Int32.Zero, bitmap.Size), options);
+            if (ex is OperationCanceledException)
+            {
+                return true;
+            }
+            else if (ex is AggregateException aggEx)
+            {
+                return aggEx.IsOnly<OperationCanceledException>();
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

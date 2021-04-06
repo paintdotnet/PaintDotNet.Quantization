@@ -1,4 +1,10 @@
-﻿using PaintDotNet.Rendering;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using PaintDotNet.Rendering;
 
 namespace PaintDotNet.Imaging
 {

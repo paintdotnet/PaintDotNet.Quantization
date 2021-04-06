@@ -8,10 +8,12 @@ using System;
 
 namespace PaintDotNet.Imaging
 {
-    public enum BitmapLockOptions
+    public static class Colors
     {
-        Read = 1,
-        Write = 2,
-        ReadWrite = Read | Write
+        public static ColorBgra32 Black => ColorBgra32.FromUInt32(0xFF000000);
+
+        public static ColorBgra32 TransparentBlack => default;
+
+        public static ColorBgra32 Zero => default;
     }
 }

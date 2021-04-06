@@ -1,4 +1,10 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

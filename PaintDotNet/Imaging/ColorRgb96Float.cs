@@ -83,10 +83,10 @@ namespace PaintDotNet.Imaging
                 this.b.GetHashCode());
         }
 
-        PixelFormat INaturalPixelInfo.PixelFormat => PixelFormat.Rgb96Float;
-
         int INaturalPixelInfo.BytesPerPixel => 12;
 
         int IPixelInfo.BitsPerPixel => 96;
+
+        PixelFormat IPixelInfo.PixelFormat => PixelFormat.Rgb96Float;
     }
 }

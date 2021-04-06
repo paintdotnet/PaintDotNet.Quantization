@@ -1,4 +1,10 @@
-﻿using PaintDotNet.Functional;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using PaintDotNet.Functional;
 using PaintDotNet.Rendering;
 using System;
 using System.Collections.Concurrent;

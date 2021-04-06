@@ -4,28 +4,26 @@
 // All Rights Reserved.                                                        //
 /////////////////////////////////////////////////////////////////////////////////
 
-using PaintDotNet.Rendering;
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
-namespace PaintDotNet.Imaging
+namespace PaintDotNet.Collections
 {
-    public unsafe interface IBitmapLock<TPixel>
-        : IDisposable
-          where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+    public struct ComparisonWrapper<T>
+        : IComparer<T>
     {
-        SizeInt32 Size
+        private Comparison<T> comparison;
+
+        public ComparisonWrapper(Comparison<T> comparison)
         {
-            get;
+            this.comparison = comparison;
         }
 
-        TPixel* Buffer
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int Compare(T x, T y)
         {
-            get;
-        }
-
-        int Stride
-        {
-            get;
+            return this.comparison(x, y);
         }
     }
 }

@@ -1,4 +1,10 @@
-﻿using PaintDotNet.Collections;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using PaintDotNet.Collections;
 using System;
 using System.Collections;
 using System.Collections.Generic;

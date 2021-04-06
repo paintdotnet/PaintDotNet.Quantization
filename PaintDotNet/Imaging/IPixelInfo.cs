@@ -1,18 +1,23 @@
-﻿using System;
+﻿/////////////////////////////////////////////////////////////////////////////////
+// paint.net                                                                   //
+// Copyright (C) dotPDN LLC, Rick Brewster, and contributors.                  //
+// All Rights Reserved.                                                        //
+/////////////////////////////////////////////////////////////////////////////////
+
+using System;
 
 namespace PaintDotNet.Imaging
 {
     public interface IPixelInfo
     {
-        int BitsPerPixel
+        PixelFormat PixelFormat
         {
             get;
         }
 
-        /*
-        PixelFormat PixelFormat
+        int BitsPerPixel
         {
             get;
-        }*/
+        }
     }
 }
