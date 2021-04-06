@@ -1,12 +1,41 @@
-﻿using System;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Environments;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Running;
+using System;
 
 namespace PaintDotNet.Quantization
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            BenchmarkRunner.Run<Benchmarks>();
         }
+    }
+
+    public class Benchmarks
+    {
+        [Benchmark]
+        public void CalculateSomething()
+        {
+            double[] array = new double[5000];
+            for (int i = 0; i < array.Length; ++i)
+            {
+                array[i] = Math.Sqrt(i * i);
+            }
+        }
+
+        [Benchmark]
+        public void CalculateSomething2()
+        {
+            double[] array = new double[5000];
+            for (int i = 0; i < array.Length; ++i)
+            {
+                array[i] = Math.Sqrt(Math.Sqrt(i * i * i * i));
+            }
+        }
+
     }
 }
