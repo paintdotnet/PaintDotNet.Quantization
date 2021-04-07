@@ -9,18 +9,18 @@ using System;
 
 namespace PaintDotNet.Imaging
 {
-    public static class BitmapSourceExtensions
+    public static class ImagingFactoryExtensions
     {
-        public static unsafe void CopyPixels<TPixel>(this IBitmapSource<TPixel> source, RectInt32? srcRect, IBitmapLock<TPixel> buffer)
+        public static IBitmap<TPixel> CreateBitmap<TPixel>(this IImagingFactory factory, SizeInt32 size)
             where TPixel : unmanaged, INaturalPixelInfo<TPixel>
         {
-            source.CopyPixels(srcRect, buffer.Buffer, buffer.Stride);
+            return factory.CreateBitmap<TPixel>(size.width, size.height);
         }
 
-        public static unsafe void CopyPixels<TPixel>(this IBitmapSource<TPixel> source, RectInt32? srcRect, TPixel* pBuffer, int bufferStride)
+        public static IBitmapSource<TPixel> CreateFormatConvertedBitmap<TPixel>(this IImagingFactory factory, IBitmapSource source)
             where TPixel : unmanaged, INaturalPixelInfo<TPixel>
         {
-            source.CopyPixels(srcRect, (void*)pBuffer, bufferStride);
+            return (IBitmapSource<TPixel>)factory.CreateFormatConvertedBitmap(source, default(TPixel).PixelFormat);
         }
     }
 }

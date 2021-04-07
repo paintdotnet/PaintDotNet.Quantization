@@ -16,8 +16,14 @@ using System.Threading.Tasks;
 
 namespace PaintDotNet.Imaging
 {
-    internal static class ColorHistogram
+    public static class ColorHistogram
     {
+        public static unsafe ColorHistogram<TPixel> Create<TPixel>(IBitmapSource<TPixel> source)
+            where TPixel : unmanaged, INaturalPixelInfo<TPixel>, IEquatable<TPixel>
+        {
+            return Create<TPixel>(source, CancellationToken.None);
+        }
+
         public static unsafe ColorHistogram<TPixel> Create<TPixel>(IBitmapSource<TPixel> source, CancellationToken cancelToken)
             where TPixel : unmanaged, INaturalPixelInfo<TPixel>, IEquatable<TPixel>
         {
@@ -42,6 +48,11 @@ namespace PaintDotNet.Imaging
             {
                 return value;
             }
+        }
+
+        public static unsafe ColorHistogram<ColorBgr24> CreateOpaque(IBitmapSource<ColorBgra32> source)
+        {
+            return CreateOpaque(source, CancellationToken.None);
         }
 
         public static unsafe ColorHistogram<ColorBgr24> CreateOpaque(IBitmapSource<ColorBgra32> source, CancellationToken cancelToken)
@@ -69,7 +80,7 @@ namespace PaintDotNet.Imaging
             }
         }
 
-        public static unsafe ColorHistogram<TPixelResult> Create<TPixel, TPixelResult, TPredicate, TSelector>(
+        private static unsafe ColorHistogram<TPixelResult> Create<TPixel, TPixelResult, TPredicate, TSelector>(
             IBitmapSource<TPixel> source,
             TPredicate predicate,
             TSelector selector,

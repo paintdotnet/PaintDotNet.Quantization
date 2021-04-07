@@ -9,18 +9,24 @@ using System.Threading;
 
 namespace PaintDotNet.Imaging.Quantization
 {
-    public interface IQuantizer
+    public static class QuantizerExtensions
     {
-        ColorBgra32[] GeneratePalette(
+        public static ColorBgra32[] GeneratePalette(
+            this IQuantizer quantizer,
             IBitmapSource<ColorBgra32> source,
             int maxColorCount,
-            bool addTransparentColor,
-            CancellationToken cancelToken);
+            bool addTransparentColor)
+        {
+            return quantizer.GeneratePalette(source, maxColorCount, addTransparentColor, CancellationToken.None);
+        }
 
-        ColorBgra32[] GeneratePalette(
+        public static ColorBgra32[] GeneratePalette(
+            this IQuantizer quantizer,
             ColorHistogram<ColorBgr24> histogram,
             int maxColorCount,
-            bool addtransparentColor,
-            CancellationToken cancelToken);
+            bool addtransparentColor)
+        {
+            return quantizer.GeneratePalette(histogram, maxColorCount, addtransparentColor, CancellationToken.None);
+        }
     }
 }

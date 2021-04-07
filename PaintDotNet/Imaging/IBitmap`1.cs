@@ -5,13 +5,15 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using PaintDotNet.Rendering;
+using System;
 
 namespace PaintDotNet.Imaging
 {
     public interface IBitmap<TPixel>
-        : IBitmapSource<TPixel>
+        : IBitmap,
+          IBitmapSource<TPixel>
           where TPixel : unmanaged, INaturalPixelInfo<TPixel>
     {
-        IBitmapLock<TPixel> Lock(RectInt32 rect, BitmapLockOptions options);
+        new IBitmapLock<TPixel> Lock(RectInt32 rect, BitmapLockOptions options);
     }
 }

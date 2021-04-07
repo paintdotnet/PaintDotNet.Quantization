@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace PaintDotNet.Imaging
 {
-    internal sealed class ColorHistogram<TPixel>
+    public sealed class ColorHistogram<TPixel>
         : IReadOnlyCollection<ColorHistogram<TPixel>.Entry>
           where TPixel : unmanaged, INaturalPixelInfo, IEquatable<TPixel>
     {

@@ -3,7 +3,10 @@ using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
+using PaintDotNet.Imaging;
+using PaintDotNet.Imaging.Quantization;
 using System;
+using System.IO;
 
 namespace PaintDotNet.Quantization
 {
@@ -11,31 +14,40 @@ namespace PaintDotNet.Quantization
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<Benchmarks>();
+            QuantizeSomething();
+        }
+
+        private static void QuantizeSomething()
+        {
+            IImagingFactory factory = ImagingFactory.Instance;
+
+            const string imagePath = @"C:\Users\Rick\OneDrive\Pictures\Test\Decimal_Clock_face_by_Pierre_Daniel_Destigny_1798-1805.jpg";
+            IBitmap bitmap;
+            using (Stream stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                bitmap = factory.LoadBitmapFromStream(stream);
+            }
+
+            IBitmapSource<ColorBgra32> sourceBgra32 = factory.CreateFormatConvertedBitmap<ColorBgra32>(bitmap);
+
+            ColorHistogram<ColorBgr24> histogram = ColorHistogram.CreateOpaque(sourceBgra32);
+
+            OctreeQuantizer quantizer = new OctreeQuantizer();
+            ColorBgra32[] colors = quantizer.GeneratePalette(histogram, 256, false);
+            PaletteMap paletteMap = new ProximityPaletteMap(colors);
+
+            QuantizedBitmapSource quantizedSource = new QuantizedBitmapSource(sourceBgra32, paletteMap, 0);
+            IBitmapSource<ColorBgra32> quantizedSourceBgra32 = factory.CreateFormatConvertedBitmap<ColorBgra32>(quantizedSource);
+            IBitmap<ColorBgra32> result = factory.CreateBitmap<ColorBgra32>(quantizedSource.Size);
+            using (IBitmapLock<ColorBgra32> resultLock = result.Lock(BitmapLockOptions.ReadWrite))
+            {
+                quantizedSourceBgra32.CopyPixels(null, resultLock);
+            }
         }
     }
 
     public class Benchmarks
     {
-        [Benchmark]
-        public void CalculateSomething()
-        {
-            double[] array = new double[5000];
-            for (int i = 0; i < array.Length; ++i)
-            {
-                array[i] = Math.Sqrt(i * i);
-            }
-        }
-
-        [Benchmark]
-        public void CalculateSomething2()
-        {
-            double[] array = new double[5000];
-            for (int i = 0; i < array.Length; ++i)
-            {
-                array[i] = Math.Sqrt(Math.Sqrt(i * i * i * i));
-            }
-        }
 
     }
 }

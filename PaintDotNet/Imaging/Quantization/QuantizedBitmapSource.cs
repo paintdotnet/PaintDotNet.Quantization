@@ -10,6 +10,8 @@
 
 using PaintDotNet.Rendering;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PaintDotNet.Imaging.Quantization
 {
@@ -57,9 +59,14 @@ namespace PaintDotNet.Imaging.Quantization
 
         public int NextY => this.copyPixelsImplCache?.NextY ?? 0;
 
+        public IReadOnlyList<ColorBgra32>? GetPalette()
+        {
+            return this.paletteMap.Colors;
+        }
+
         public void CopyPixels(
             RectInt32? srcRect,
-            ColorIndexed8* pBuffer,
+            void* pBuffer,
             int bufferStride)
         {
             RectInt32 rect = srcRect ?? new RectInt32(Point2Int32.Zero, this.Size);
