@@ -97,7 +97,7 @@ namespace PaintDotNet.Imaging
             using ThreadLocal<IBitmapLock<TPixel>> perThreadRowBuffer = new ThreadLocal<IBitmapLock<TPixel>>(
                 delegate ()
                 {
-                    using IBitmap<TPixel> rowBuffer = ImagingFactory.Instance.CreateBitmap<TPixel>(sourceSize.Width, 1);
+                    IBitmap<TPixel> rowBuffer = ImagingFactory.Instance.CreateBitmap<TPixel>(sourceSize.Width, 1);
                     return rowBuffer.Lock(BitmapLockOptions.ReadWrite);
                 },
                 true);

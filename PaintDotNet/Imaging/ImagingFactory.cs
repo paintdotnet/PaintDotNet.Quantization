@@ -243,7 +243,7 @@ namespace PaintDotNet.Imaging
 
                 public IBitmapLock<TPixel> Lock(RectInt32 rect, BitmapLockOptions options)
                 {
-                    return new GdipBitmapDataAsLock<TPixel>(this.gdipBitmapLock, rect);
+                    return new GdipBitmapDataAsLock<TPixel>(this, this.gdipBitmapLock, rect);
                 }
 
                 IBitmapLock IBitmap.Lock(RectInt32 rect, BitmapLockOptions options)
@@ -257,13 +257,22 @@ namespace PaintDotNet.Imaging
                   IBitmapLock<TPixel>
                   where TPixel : unmanaged, INaturalPixelInfo<TPixel>
             {
+                private object keepAlive;
                 private BitmapData gdipBitmapLock;
                 private RectInt32 rect;
 
-                public GdipBitmapDataAsLock(BitmapData gdipBitmapLock, RectInt32 rect)
+                public GdipBitmapDataAsLock(object keepAlive, BitmapData gdipBitmapLock, RectInt32 rect)
                 {
+                    this.keepAlive = keepAlive;
                     this.gdipBitmapLock = gdipBitmapLock;
                     this.rect = rect;
+                }
+
+                protected override void Dispose(bool disposing)
+                {
+                    this.keepAlive = null!;
+                    this.gdipBitmapLock = null!;
+                    base.Dispose(disposing);
                 }
 
                 public SizeInt32 Size => this.rect.Size;
@@ -273,12 +282,6 @@ namespace PaintDotNet.Imaging
                 public TPixel* Buffer => (TPixel*)((byte*)this.gdipBitmapLock.Scan0 + ((long)this.rect.Top * this.Stride)) + this.rect.Left;
 
                 void* IBitmapLock.Buffer => this.Buffer;
-
-                protected override void Dispose(bool disposing)
-                {
-                    this.gdipBitmapLock = null!;
-                    base.Dispose(disposing);
-                }
             }
         }
     }
