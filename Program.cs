@@ -38,7 +38,8 @@ namespace PaintDotNet.Quantization
 
             QuantizedBitmapSource quantizedSource = new QuantizedBitmapSource(sourceBgra32, paletteMap, 0);
             IBitmapSource<ColorBgra32> quantizedSourceBgra32 = factory.CreateFormatConvertedBitmap<ColorBgra32>(quantizedSource);
-            IBitmap<ColorBgra32> result = factory.CreateBitmap<ColorBgra32>(quantizedSource.Size);
+            IBitmap<ColorBgra32> result = factory.CreateBitmap<ColorBgra32>(bitmap.Size);
+
             using (IBitmapLock<ColorBgra32> resultLock = result.Lock(BitmapLockOptions.ReadWrite))
             {
                 quantizedSourceBgra32.CopyPixels(null, resultLock);
