@@ -21,7 +21,7 @@ namespace PaintDotNet.Quantization
         {
             IImagingFactory factory = ImagingFactory.Instance;
 
-            const string imagePath = @"C:\Users\Rick\OneDrive\Pictures\Test\Decimal_Clock_face_by_Pierre_Daniel_Destigny_1798-1805.jpg";
+            const string imagePath = "IMG_0386.jpg";
             IBitmap bitmap;
             using (Stream stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -43,6 +43,11 @@ namespace PaintDotNet.Quantization
             using (IBitmapLock<ColorBgra32> resultLock = result.Lock(BitmapLockOptions.ReadWrite))
             {
                 quantizedSourceBgra32.CopyPixels(null, resultLock);
+            }
+
+            using (Stream output = new FileStream("quantized.png", FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+            {
+                factory.SaveBitmapToStream(output, result, ImageFormat.Png);
             }
         }
     }

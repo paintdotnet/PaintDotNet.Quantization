@@ -16,6 +16,7 @@ using System.IO;
 
 namespace PaintDotNet.Imaging
 {
+    using GdipImageFormat = System.Drawing.Imaging.ImageFormat;
     using GdipPixelFormat = System.Drawing.Imaging.PixelFormat;
 
     public static class ImagingFactory
@@ -54,13 +55,52 @@ namespace PaintDotNet.Imaging
             public IBitmap<TPixel> CreateBitmap<TPixel>(int width, int height)
                 where TPixel : unmanaged, INaturalPixelInfo<TPixel>
             {
+                if (default(TPixel).PixelFormat == PixelFormat.Indexed8)
+                {
+                    // we need to add a way to set the palette
+                    throw new ArgumentException("Indexed8 isn't yet supported");
+                }
+
                 return new GdipBitmap<TPixel>(width, height);
             }
 
             public IBitmap LoadBitmapFromStream(Stream stream)
             {
                 Image image = Bitmap.FromStream(stream);
-                return GdipBitmap.From(image);
+                return CreateBitmapFrom(image);
+            }
+
+            public unsafe void SaveBitmapToStream(Stream stream, IBitmap bitmap, ImageFormat format)
+            {
+                if (bitmap is GdipBitmap ourBitmap)
+                {
+                    GdipImageFormat gdipFormat;
+                    switch (format)
+                    {
+                        case ImageFormat.Png:
+                            gdipFormat = GdipImageFormat.Png;
+                            break;
+
+                        default:
+                            throw new InvalidEnumArgumentException();
+                    }
+
+                    using (IBitmapLock bitmapLock = bitmap.Lock(BitmapLockOptions.Read))
+                    {
+                        using Bitmap alias = new Bitmap(
+                            bitmap.Size.Width, 
+                            bitmap.Size.Height, 
+                            bitmapLock.Stride, 
+                            GetGdipPixelFormat(bitmap.PixelFormat), 
+                            (IntPtr)bitmapLock.Buffer);
+
+                        alias.Save(stream, gdipFormat);
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException();
+                }
             }
 
             public IBitmapSource CreateFormatConvertedBitmap(IBitmapSource source, PixelFormat dstFormat)
@@ -83,7 +123,7 @@ namespace PaintDotNet.Imaging
                 throw new ArgumentException();
             }
 
-            public static PixelFormat GetPixelFormat(GdipPixelFormat pixelFormat)
+            private static PixelFormat GetPixelFormat(GdipPixelFormat pixelFormat)
             {
                 switch (pixelFormat)
                 {
@@ -104,7 +144,7 @@ namespace PaintDotNet.Imaging
                 }
             }
 
-            public static GdipPixelFormat GetGdipPixelFormat(PixelFormat pixelFormat)
+            private static GdipPixelFormat GetGdipPixelFormat(PixelFormat pixelFormat)
             {
                 switch (pixelFormat)
                 {
@@ -125,65 +165,64 @@ namespace PaintDotNet.Imaging
                 }
             }
 
-            private static class GdipBitmap
+            private static IBitmap CreateBitmapFrom(Image image)
             {
-                public static IBitmap From(Image image)
+                if (image is Bitmap asBitmap)
                 {
-                    if (image is Bitmap asBitmap)
-                    {
-                        return From(asBitmap);
-                    }
-                    else
-                    {
-                        Bitmap bitmap = new Bitmap(image);
-                        return From(bitmap);
-                    }
+                    return CreateBitmapFrom(asBitmap);
                 }
-
-                public static IBitmap From(Bitmap bitmap)
+                else
                 {
-                    switch (bitmap.PixelFormat)
-                    {
-                        case GdipPixelFormat.Format8bppIndexed:
-                            return new GdipBitmap<ColorIndexed8>(bitmap);
-
-                        case GdipPixelFormat.Format24bppRgb:
-                            return new GdipBitmap<ColorBgr24>(bitmap);
-
-                        case GdipPixelFormat.Format32bppRgb:
-                            return new GdipBitmap<ColorBgr32>(bitmap);
-
-                        case GdipPixelFormat.Format32bppArgb:
-                            return new GdipBitmap<ColorBgra32>(bitmap);
-                    }
-
-                    throw new ArgumentException();
+                    Bitmap bitmap = new Bitmap(image);
+                    return CreateBitmapFrom(bitmap);
                 }
             }
 
-            private sealed class GdipBitmap<TPixel>
-                : Disposable,
-                  IBitmap<TPixel>
-                  where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+            private static IBitmap CreateBitmapFrom(Bitmap bitmap)
             {
-                private static readonly GdipPixelFormat gdipPixelFormat = GetGdipPixelFormat(default(TPixel).PixelFormat);
+                switch (bitmap.PixelFormat)
+                {
+                    case GdipPixelFormat.Format8bppIndexed:
+                        return new GdipBitmap<ColorIndexed8>(bitmap);
 
+                    case GdipPixelFormat.Format24bppRgb:
+                        return new GdipBitmap<ColorBgr24>(bitmap);
+
+                    case GdipPixelFormat.Format32bppRgb:
+                        return new GdipBitmap<ColorBgr32>(bitmap);
+
+                    case GdipPixelFormat.Format32bppArgb:
+                        return new GdipBitmap<ColorBgra32>(bitmap);
+                }
+
+                throw new ArgumentException();
+            }
+
+            private abstract class GdipBitmap
+                : Disposable,
+                  IBitmap
+            {
                 private Bitmap gdipBitmap;
                 private BitmapData gdipBitmapLock;
+                private PixelFormat pixelFormat;
+                private int sizeOfPixel;
 
-                public GdipBitmap(int width, int height)
-                    : this(new Bitmap(width, height, gdipPixelFormat))
+                public GdipBitmap(int width, int height, PixelFormat pixelFormat, GdipPixelFormat gdipPixelFormat)
+                    : this(new Bitmap(width, height, gdipPixelFormat), pixelFormat)
                 {
                 }
 
-                public GdipBitmap(Bitmap gdipBitmap)
+                public GdipBitmap(Bitmap gdipBitmap, PixelFormat pixelFormat)
                 {
                     this.gdipBitmap = gdipBitmap;
 
                     this.gdipBitmapLock = this.gdipBitmap.LockBits(
-                        new Rectangle(0, 0, gdipBitmap.Width, gdipBitmap.Height), 
-                        ImageLockMode.ReadWrite, 
-                        gdipPixelFormat);
+                        new Rectangle(0, 0, gdipBitmap.Width, gdipBitmap.Height),
+                        ImageLockMode.ReadWrite,
+                        this.gdipBitmap.PixelFormat);
+
+                    this.pixelFormat = pixelFormat;
+                    this.sizeOfPixel = this.pixelFormat.GetBytesPerPixel();
                 }
 
                 protected override void Dispose(bool disposing)
@@ -199,9 +238,33 @@ namespace PaintDotNet.Imaging
                     base.Dispose(disposing);
                 }
 
-                public PixelFormat PixelFormat => default(TPixel).PixelFormat;
+                public Bitmap Bitmap => this.gdipBitmap;
 
-                public SizeInt32 Size => new SizeInt32(this.gdipBitmap.Width, this.gdipBitmap.Height);
+                protected BitmapData BitmapLock => this.gdipBitmapLock;
+
+                public SizeInt32 Size => new SizeInt32(this.Bitmap.Width, this.Bitmap.Height);
+
+                public PixelFormat PixelFormat => this.pixelFormat;
+
+                public unsafe void CopyPixels(RectInt32? srcRect, void* pBuffer, int bufferStride)
+                {
+                    CopyPixelsImpl(srcRect ?? new RectInt32(Point2Int32.Zero, this.Size), pBuffer, bufferStride);
+                }
+
+                private unsafe void CopyPixelsImpl(RectInt32 srcRect, void* pBuffer, int bufferStride)
+                {
+                    int bytesPerRow = srcRect.width * this.sizeOfPixel;
+                    void* pSrcRow = (byte*)this.BitmapLock.Scan0 + ((long)srcRect.y * this.BitmapLock.Stride) + (srcRect.x * this.sizeOfPixel);
+                    void* pBufferRow = pBuffer;
+
+                    for (int dstY = 0; dstY < srcRect.height; ++dstY)
+                    {
+                        BufferUtil.Copy(pBufferRow, pSrcRow, bytesPerRow);
+
+                        pSrcRow = (byte*)pSrcRow + this.BitmapLock.Stride;
+                        pBufferRow = (byte*)pBufferRow + bufferStride;
+                    }
+                }
 
                 public IReadOnlyList<ColorBgra32>? GetPalette()
                 {
@@ -210,7 +273,7 @@ namespace PaintDotNet.Imaging
                         return null;
                     }
 
-                    Color[] entries = this.gdipBitmap.Palette.Entries;
+                    Color[] entries = this.Bitmap.Palette.Entries;
                     ColorBgra32[] palette = new ColorBgra32[entries.Length];
                     for (int i = 0; i < palette.Length; ++i)
                     {
@@ -221,51 +284,57 @@ namespace PaintDotNet.Imaging
                     return palette;
                 }
 
-                public unsafe void CopyPixels(RectInt32? srcRect, void* pBuffer, int bufferStride)
+                public virtual IBitmapLock Lock(RectInt32 rect, BitmapLockOptions options)
                 {
-                    CopyPixelsImpl(srcRect ?? new RectInt32(Point2Int32.Zero, this.Size), pBuffer, bufferStride);
-                }
-
-                private unsafe void CopyPixelsImpl(RectInt32 srcRect, void* pBuffer, int bufferStride)
-                {
-                    int bytesPerRow = srcRect.width * sizeof(TPixel);
-                    TPixel* pSrcRow = (TPixel*)((byte*)this.gdipBitmapLock.Scan0 + ((long)srcRect.y * this.gdipBitmapLock.Stride)) + srcRect.x;
-                    TPixel* pBufferRow = (TPixel*)pBuffer;
-
-                    for (int dstY = 0; dstY < srcRect.height; ++dstY)
-                    {
-                        BufferUtil.Copy(pBufferRow, pSrcRow, bytesPerRow);
-
-                        pSrcRow = (TPixel*)((byte*)pSrcRow + this.gdipBitmapLock.Stride);
-                        pBufferRow = (TPixel*)((byte*)pBufferRow + bufferStride);
-                    }
-                }
-
-                public IBitmapLock<TPixel> Lock(RectInt32 rect, BitmapLockOptions options)
-                {
-                    return new GdipBitmapDataAsLock<TPixel>(this, this.gdipBitmapLock, rect);
-                }
-
-                IBitmapLock IBitmap.Lock(RectInt32 rect, BitmapLockOptions options)
-                {
-                    return Lock(rect, options);
+                    return new GdipBitmapDataAsLock(this, this.gdipBitmapLock, rect);
                 }
             }
 
-            private unsafe sealed class GdipBitmapDataAsLock<TPixel>
-                : Disposable,
-                  IBitmapLock<TPixel>
+            private sealed class GdipBitmap<TPixel>
+                : GdipBitmap,
+                  IBitmap<TPixel>
                   where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+            {
+                private static readonly GdipPixelFormat gdipPixelFormat = GetGdipPixelFormat(default(TPixel).PixelFormat);
+
+                public GdipBitmap(int width, int height)
+                    : base(width, height, default(TPixel).PixelFormat, gdipPixelFormat)
+                {
+                }
+
+                public GdipBitmap(Bitmap bitmap)
+                    : base(bitmap, default(TPixel).PixelFormat)
+                {
+                }
+
+                public override IBitmapLock Lock(RectInt32 rect, BitmapLockOptions options)
+                {
+                    return new GdipBitmapDataAsLock<TPixel>(this, this.BitmapLock, rect);
+                }
+
+                IBitmapLock<TPixel> IBitmap<TPixel>.Lock(RectInt32 rect, BitmapLockOptions optionsS)
+                {
+                    return new GdipBitmapDataAsLock<TPixel>(this, this.BitmapLock, rect);
+                }
+            }
+
+            private unsafe class GdipBitmapDataAsLock
+                : Disposable,
+                  IBitmapLock
             {
                 private object keepAlive;
                 private BitmapData gdipBitmapLock;
                 private RectInt32 rect;
+                private int sizeOfPixel;
 
                 public GdipBitmapDataAsLock(object keepAlive, BitmapData gdipBitmapLock, RectInt32 rect)
                 {
                     this.keepAlive = keepAlive;
                     this.gdipBitmapLock = gdipBitmapLock;
                     this.rect = rect;
+
+                    PixelFormat pixelFormat = GetPixelFormat(gdipBitmapLock.PixelFormat);
+                    this.sizeOfPixel = pixelFormat.GetBytesPerPixel();
                 }
 
                 protected override void Dispose(bool disposing)
@@ -279,9 +348,20 @@ namespace PaintDotNet.Imaging
 
                 public int Stride => this.gdipBitmapLock.Stride;
 
-                public TPixel* Buffer => (TPixel*)((byte*)this.gdipBitmapLock.Scan0 + ((long)this.rect.Top * this.Stride)) + this.rect.Left;
+                public void* Buffer => ((byte*)this.gdipBitmapLock.Scan0 + ((long)this.rect.Top * this.Stride)) + (this.rect.Left * this.sizeOfPixel);
+            }
 
-                void* IBitmapLock.Buffer => this.Buffer;
+            private unsafe sealed class GdipBitmapDataAsLock<TPixel>
+                : GdipBitmapDataAsLock,
+                  IBitmapLock<TPixel>
+                  where TPixel : unmanaged, INaturalPixelInfo<TPixel>
+            {
+                public GdipBitmapDataAsLock(object keepAlive, BitmapData gdipBitmapLock, RectInt32 rect)
+                    : base(keepAlive, gdipBitmapLock, rect)
+                {
+                }
+
+                public new TPixel* Buffer => (TPixel*)base.Buffer;
             }
         }
     }

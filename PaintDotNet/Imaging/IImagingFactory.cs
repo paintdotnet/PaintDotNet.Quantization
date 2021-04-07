@@ -23,5 +23,10 @@ namespace PaintDotNet.Imaging
             PixelFormat dstFormat);
 
         IBitmap LoadBitmapFromStream(Stream stream);
+
+        void SaveBitmapToStream(
+            Stream strea, 
+            IBitmap bitmap, 
+            ImageFormat format);
     }
 }
