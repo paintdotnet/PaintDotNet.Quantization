@@ -47,7 +47,7 @@ private static int GetColorIndex(ref Rgba32 color, int level)
 }
 ```
 
-This code will now produce the correct output. Be warned, however, that memory usage will now be higher since there will substantially more leaf nodes.
+This code will now produce the correct output. Be warned, however, that memory usage will now be higher since there will substantially more leaf nodes. Reducing the tree and generating the palette will also be slower.
 
 This is not just a theoretical quality improvement, by the way. I saw images being reduced to 64 colors instead of 256! I believe it was an image of a black-to-red gradient that caused this to happen, which should have fit nicely into 256 colors.
 
