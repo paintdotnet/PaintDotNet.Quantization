@@ -114,7 +114,7 @@ The code here in this repo doesn't use this approach because the next section fi
 
 The MSDN code makes use of a `reducibleNodes` array that is built while populating the Octree. It's just a two-dimensional jagged array of all the nodes in the tree; the first index is the level, with the second index being an unordered (in principal anyway) list of the nodes at that level.
 
-In practice, however, the array's ordering is important to the overall quality of the palette. The second level of that array is filled in as you call `AddColor()`, which means that the final stages of the reduction process will prefer to merge colors that were added last; those that first appeared toward the bottom of the image, in other words, assuming it is added to the Octree top-to-bottom.
+In practice, however, the array's ordering is important to the overall quality of the palette. The second level of that array is filled in as you call `AddColor()`, which means that the final stages of the reduction process will prefer to merge colors that were added last; those that first appeared toward the bottom of the image, in other words, assuming the image is processed top-to-bottom.
 
 To fix this, I changed the reduction algorithm somewhat. See `OctreeQuantizer::Octree::Reduce()` for the implementation.
 
