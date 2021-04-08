@@ -98,7 +98,7 @@ I found it was much faster to pre-process the image and create a color histogram
 
 Be sure to multiply the `red`, `green`, and `blue` values by the `count` if you take this approach.
 
-In this repo, look for the `ColorHistogram` class for my implementation. I support full 64-bit counts, as Paint.NET is intended to work with very large images, so storing the histogram efficiently is important: since there are 2^24 maximum RGB colors, and a `[colorBGR, long]` tuple would take 11 bytes, that would mean about 176 MiB for an image that uses all colors. Instead, I store 3 separate lists: one for colors that only show up once (no need to store count), another list that uses 32-bit ints, and a final list that uses 64-bit longs. Enumeration for the client is still homogenous.
+In this repo, look for the `ColorHistogram` class for my implementation. I support full 64-bit counts, as Paint.NET is intended to work with very large images, so storing the histogram efficiently is important: since there are 2^24 maximum RGB colors, and a `[colorBGR, long]` tuple would take 11 bytes, that would mean about 176 MiB for an image that uses all colors. Instead, I store 3 separate lists: one for colors that only show up once (no need to store count), another list that uses 32-bit `uint`s, and a final list that uses 64-bit `long`s. Enumeration for the client is still homogenous, it's just `IEnumerable<Entry>`, where `Entry` is a struct with a `ColorBgr24` and a `long` for the count.
 
 More memory is required for this approach, but it's temporary, and is still quite a bit less than the `OctreeNode`s (see section 6). It is probably possible to improve this, possibly by destroying/trimming the histogram while enumerating it, but I didn't think it was worth pursuing.
 
