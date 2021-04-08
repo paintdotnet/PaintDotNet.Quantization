@@ -94,9 +94,9 @@ This will save the static field access, pointer math, and memory dereference.
 
 `Octree.AddColor()` is called once for every pixel in the image. The problem is, it's slow. It's not poorly written, it just requires a lot of jumping around to get its job done. When you have millions or even billions of colors in an image, it gets really bad.
 
-I found it was much faster to pre-process the image and create a color histogram, essentially a `[color, count]` list, and amend `AddColor()` to take the count value. Then, each color is only sent down the tree once and performance is much better.
+I found it was much faster to pre-process the image and create a color histogram, essentially a `[color, count]` list, and amend `AddColor()` to take the count value. Then, each color is only sent down the tree once and performance is much better. Generating the histogram is also easily parallelizable, greatly improving performance on higher core count systems.
 
-Be sure to multiply the `red`, `green`, and `blue` values by the count if you take this approach.
+Be sure to multiply the `red`, `green`, and `blue` values by the `count` if you take this approach.
 
 In this repo, look for the `ColorHistogram` class for a sample implementation. I support full 64-bit counts, as Paint.NET is intended to work with very large images, so storing the histogram efficiently is important: since there are 2^24 maximum RGB colors, and a `[colorBGR, long]` tuple would take 11 bytes, that would mean about 176 MiB for an image that uses all colors. Instead, I store 3 separate lists: one for colors that only show up once (no need to store count), another list that uses 32-bit ints, and a final list that uses 64-bit longs. Enumeration for the client is still homogenous.
 
