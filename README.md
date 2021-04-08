@@ -52,7 +52,7 @@ This code will now produce the correct output. Be warned, however, that memory u
 This is not just a theoretical quality improvement, by the way. I saw images being reduced to 64 colors instead of 256! I believe it was an image of a black-to-red gradient that caused this to happen, which should have fit nicely into 256 colors.
 
 ### 2) Unnecessary lookup table
-There's also some silliness with regard to the use of a lookup table for calculating a mask in `GetColorIndex`:
+There's also some silliness with regard to the use of a lookup table for calculating the mask in `GetColorIndex`:
 
 ```
 /// <summary>
