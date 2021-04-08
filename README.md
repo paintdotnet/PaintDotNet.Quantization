@@ -28,7 +28,7 @@ private static int GetColorIndex(ref Rgba32 color, int level)
 
 *(I'm using the code from ImageSharp, btw, not the MSDN article.)*
 
-The problem is that when `level` is large, `shift` will be small, and `(shift - 1)` and `(shift - 2)` will be negative. The intention is to do a shift-right operation, and maybe that's how it works in C, but definitely not in C#. The result is zero.
+The problem is that when `level` is large, `shift` will be small, and `(shift - 1)` and `(shift - 2)` will be negative. The intention is to do a shift-left operation, and maybe that's how it works in C, but definitely not in C#. The result is zero.
 
 The fix is to only shift-right by `shift`, and then do a shift-left by 1 or 2:
 
