@@ -25,7 +25,7 @@ namespace PaintDotNet.Imaging
         IBitmap LoadBitmapFromStream(Stream stream);
 
         void SaveBitmapToStream(
-            Stream strea, 
+            Stream stream, 
             IBitmap bitmap, 
             ImageFormat format);
     }
