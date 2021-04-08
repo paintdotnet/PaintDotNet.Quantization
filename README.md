@@ -122,7 +122,7 @@ I removed the `reducibleNodes` list entirely, opting instead to traverse the tre
 
 In the final stage of reduction, all of the leaf nodes are gathered into a list and sorted by their weight (`pixelCount`). Nodes with the lowest weight, which store information about colors that were seen less often in the image, are reduced first. Because many nodes could have the same weight, tie-breaking for the sort order is done by comparing the hash code of the node's output color at high precision (32-bit floating point per component). This is done via the `ColorRgb96Float` struct in this repo's code.
 
-Using the hash code achieves a pseudo-random balancing to the order that nodes are reduced. I contemplated other balancing criteria, but ultimately nothing was satisfactory. It has some benefits, especially around being straightforwardly portable to other platforms, languages, compilers.
+Using the hash code achieves a pseudo-random balancing to the order that nodes are reduced. I contemplated other balancing methods, but ultimately nothing was satisfactory. Using the hash code has some benefits, especially around being straightforwardly portable to other platforms, languages, compilers, and not being dependent on an opaque random number generator.
 
 I'm not fully convinced that reducing low-weight nodes first is the best approach, nor that using the color's hash code for tie-breaking the sort order is. However, it's a simple approach that is easy to change and experiment with, and it does produce good looking results.
 
