@@ -104,7 +104,7 @@ More memory is required for this approach, but it's temporary, and is still quit
 
 ### 4) Exact palette size is not always achieved
 
-A problem with using the standard Octree quantization code is that the `Reduce()` method, on a per-node basis, is all or nothing. If you have reduced the tree down to 260 leaf nodes, and you're reducing a node that has 8 children, the color count will be reduced by 7. You'll end up with 253 colors instead of 256.
+A problem with using the standard Octree quantization code is that the `Reduce()` method, on a per-node basis, is all or nothing. If you have reduced the tree down to 260 leaf nodes, and you're reducing a node that has 8 children, the color count will be reduced by 7. You'll end up with 253 colors instead of 256. This is *very* common in practice.
 
 I found a CodeProject article by someone who figured out a way to fix this: https://www.codeproject.com/Articles/109133/Octree-Color-Palette. Seach for "Merging for Exact Colors Count".
 
