@@ -14,6 +14,8 @@ namespace PaintDotNet.Quantization
     {
         public static void Main(string[] args)
         {
+            // TODO: supposed to have benchmarks here
+
             QuantizeSomething();
         }
 
@@ -50,10 +52,5 @@ namespace PaintDotNet.Quantization
                 factory.SaveBitmapToStream(output, result, ImageFormat.Png);
             }
         }
-    }
-
-    public class Benchmarks
-    {
-
     }
 }
