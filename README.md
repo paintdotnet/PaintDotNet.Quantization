@@ -1,9 +1,11 @@
 # PaintDotNet.Quantization
 This is the image quantization code from Paint.NET, along with supporting classes. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
 
-Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimizing Color Quantization for ASP.NET Images_ (https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)). The code in the article has made its way into a number of projects besides Paint.NET, including ImageSharp (https://github.com/SixLabors/ImageSharp). Unfortunately, it has a few bugs and quirks that this repository has fixes for.
+Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimizing Color Quantization for ASP.NET Images_ (https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)). The code in the article has made its way into a number of projects besides Paint.NET, including ImageSharp (https://github.com/SixLabors/ImageSharp). 
 
-So, here are the changes I've made in order from simple to crazy:
+Unfortunately, it has a few bugs and quirks that this repository has fixes for. I recently dove in and completely gutted this code, making fixes and improvements, and I thought it would be useful to share this with everyone else.
+
+So, here are the changes I've made, in order from simple to crazy:
 
 ### 1) Right Shift Bug
 
@@ -24,11 +26,11 @@ private static int GetColorIndex(ref Rgba32 color, int level)
 }
 ```
 
-(I'm using the code from ImageSharp, btw, not the MSDN article)
+*(I'm using the code from ImageSharp, btw, not the MSDN article.)*
 
 The problem is that when `level` is small, `shift` will be big, and `(shift - 1)` and `(shift - 2)` will be negative. The intention is to do a shift-right operation, and maybe that's how it works in C, but definitely not in C#. The result is zero.
 
-The fix is that only shift-right by `shift`, and then do a shift-left by 1 or 2. Let the compiler and JIT optimize it:
+The fix is to only shift-right by `shift`, and then do a shift-left by 1 or 2:
 
 ```
 private static int GetColorIndex(ref Rgba32 color, int level)
@@ -40,14 +42,16 @@ private static int GetColorIndex(ref Rgba32 color, int level)
     byte mask = Unsafe.Add(ref maskRef, level);
     
     return ((color.R & mask) >> shift)
-            | (((color.G & mask) >> shift) << 1))
-            | (((color.B & mask) >> shift) << 2));
+            | (((color.G & mask) >> shift) << 1)
+            | (((color.B & mask) >> shift) << 2);
 }
 ```
 
 This  code will now produce the correct output. Be warned, however, that memory usage will now be higher since there will substantially more leaf nodes.
 
-### Unnecessary lookup table
+This is not just a theoretical quality improvement, by the way. I saw images being reduced to 64 colors instead of 256! I believe it was an image of a black-to-red gradient that caused this to happen, which should have fit nicely into 256 colors.
+
+### 2) Unnecessary lookup table
 There's also some silliness with regard to the use of a lookup table for calculating a mask in `GetColorIndex`:
 
 ```
@@ -90,11 +94,13 @@ This will save the static field access, pointer math, and memory dereference.
 
 `Octree.AddColor()` is called once for every pixel in the image. The problem is, it's slow. It's not poorly written, it just requires a lot of jumping around to get its job done. When you have millions or even billions of colors in an image, it gets really bad.
 
-I found it was much faster to pre-process the image and create a color histogram, essentialy a `[color, count]` list, and amend `AddColor()` to take the count value. Then, each color is only sent down the tree once and performance is much better.
+I found it was much faster to pre-process the image and create a color histogram, essentially a `[color, count]` list, and amend `AddColor()` to take the count value. Then, each color is only sent down the tree once and performance is much better.
 
-Be sure to multiply the `red`, `green`, and `blue` values by the count.
+Be sure to multiply the `red`, `green`, and `blue` values by the count if you take this approach.
 
 In this repo, look for the `ColorHistogram` class for a sample implementation. I support full 64-bit counts, as Paint.NET is intended to work with very large images, so storing the histogram efficiently is important: since there are 2^24 maximum RGB colors, and a `[colorBGR, long]` tuple would take 11 bytes, that would mean about 176 MiB for an image that uses all colors. Instead, I store 3 separate lists: one for colors that only show up once (no need to store count), another list that uses 32-bit ints, and a final list that uses 64-bit longs. Enumeration for the client is still homogenous.
+
+More memory is required for this approach, but it's temporary, and is still quite a bit less than the `OctreeNode`s (see section 6). It is probably possible to improve this, possibly by destroying/trimming the histogram while enumerating it, but I didn't think it was worth pursuing.
 
 ### 4) Exact palette size is not possible
 
@@ -116,7 +122,7 @@ I removed the `reducibleNodes` array entirely, opting instead fo traverse the tr
 
 In the final stage of reduction, all of the leaf nodes are gathered into a list and sorted by their weight (`pixelCount`). Nodes with the lowest weight, which store information about colors that were seen less often in the image, are reduced first. Because many nodes could have the same weight, tie-breaking for the sort order is done by comparing the hash code of the node's output color at high precision (32-bit floating point per component). This is done via the `ColorRgb96Float` struct in this repo's code.
 
-Using the hash code achieves a pseudo-random balancing to the order that nodes are reduced. I contemplated other balancing criteria, but ultimately nothing was satisfactory. It has some benefits, especially around being straightfowardly portable to other platforms, languages, compilers.
+Using the hash code achieves a pseudo-random balancing to the order that nodes are reduced. I contemplated other balancing criteria, but ultimately nothing was satisfactory. It has some benefits, especially around being straightforwardly portable to other platforms, languages, compilers.
 
 I'm not fully convinced that reducing low-weight nodes first is the best approach, nor that using the color's hash code for tie-breaking the sort order is. However, it's a simple approach that is easy to change and experiment with, and it does produce good looking results.
 
@@ -129,5 +135,5 @@ This can be ameliorated by using inheritance. In my `Octree` code, `OctreeNode` 
 
 (Other approaches to solving this are also possible, such as using structs, pool allocators, and other clever ways of keeping track of sums and counts.)
 
-### 7) Mapping colors to the palette  is really slow
-TODO
+### 7) Mapping colors to the palette is REALLY slow
+TODO, coming soon
