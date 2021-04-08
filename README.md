@@ -1,11 +1,15 @@
 # PaintDotNet.Quantization
 **NOTE:** This is still pre-first draft! I'll update this to say final draft when it's all finished 🙂
 
-This is the image quantization code from Paint.NET, along with supporting classes. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
+This repo has the image quantization code from Paint.NET, along with supporting classes. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
 
 Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimizing Color Quantization for ASP.NET Images_ (https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)). The code in the article has made its way into a number of projects besides Paint.NET, including ImageSharp (https://github.com/SixLabors/ImageSharp). 
 
 Unfortunately, it has a few bugs and quirks that this repository has fixes for. I recently dove in and completely gutted this code, making fixes and improvements, and I thought it would be useful to share this with everyone else.
+
+## Background
+
+...
 
 So, here are the changes I've made, in order from simple to crazy:
 
