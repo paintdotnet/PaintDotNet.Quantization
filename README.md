@@ -70,9 +70,9 @@ private static ReadOnlySpan<byte> Mask => new byte[]
     0b1
 };
 ```
-Like most people, I'm guessing, when I integrated this code into my project I thought it was a bunch of complicated wizardry and I didn't dive in to inspect it very much. However, upon further inspection, this is a lookup table for `(1 << (7-n))`, which we really don't need a lookup table.
+Like most people, I'm guessing, when I integrated this code into my project I thought it was a bunch of complicated wizardry and I didn't dive in to inspect it very much. However, upon further inspection, this is a lookup table for `(1 << (7-n))`, which definitely doesn't need a lookup table.
 
-So, kill the `Mask` and just compute the value when it's needed. We can even use `shift` because it already equals `(1 - level)`
+So, kill the `Mask` and just compute the value when it's needed. We can even use `shift` because it already equals `(1 - level)`:
 
 ```
 private static int GetColorIndex(ref Rgba32 color, int level)
