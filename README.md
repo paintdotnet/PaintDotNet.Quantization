@@ -102,7 +102,7 @@ In this repo, look for the `ColorHistogram` class for my implementation. I suppo
 
 More memory is required for this approach, but it's temporary, and is still quite a bit less than the `OctreeNode`s (see section 6). It is probably possible to improve this, possibly by destroying/trimming the histogram while enumerating it, but I didn't think it was worth pursuing.
 
-### 4) Exact palette size is not possible
+### 4) Exact palette size is not always achieved
 
 A problem with using the standard Octree quantization code is that the `Reduce()` method, on a per-node basis, is all or nothing. If you have reduced the tree down to 260 leaf nodes, and you're reducing a node that has 8 children, the color count will be reduced by 7. You'll end up with 253 colors instead of 256.
 
