@@ -108,7 +108,7 @@ A problem with using the standard Octree quantization code is that the `Reduce()
 
 I found a CodeProject article by someone who figured out a way to fix this: https://www.codeproject.com/Articles/109133/Octree-Color-Palette. Search for "Merging for Exact Colors Count".
 
-The code here in this repo doesn't use this approach because the next section fixes both this and another problem. However, if you're looking to ease into all of these fixes one-at-a-time, you don't need to skip this one before tackling the next section.
+The code here in this repo doesn't use this approach because the next section fixes both this and another problem. However, if you're looking to ease into all of these fixes one-at-a-time, you don't need to skip this one before tackling the next section (which is much more complicated to implement).
 
 ### 5) Colors are unevenly reduced
 
