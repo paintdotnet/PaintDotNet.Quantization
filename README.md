@@ -131,7 +131,7 @@ I'm not fully convinced that reducing low-weight nodes first is the best approac
 ### 6) Leaf nodes take up a ton of memory
 If you're using 32-bit integers to store color sums and counts, like the MSDN article does, your `OctreeNode` will consume 40 bytes plus object/allocation overhead. If you're using 64-bit integers for sums and counts, this goes way up to around 56 bytes. If the image being processed has 500,000 unique colors, the total here is 20MB for 32-bit and 28MB for 64-bit. For a "worst" case image, with all 2^24 RGB colors, this balloons to 671MB and 939MB.
 
-This can be ameliorated by using inheritance and polymorphism (virtual methods/properties, i.o.w.). In my `Octree` code, `OctreeNode` is a base class that does not store these values. Instead, derived classes with specializations for low color counts are used. See the code for more details. It can be optimized further, and I experimented with it, but the complexity grew quite quickly.
+This can be ameliorated by using inheritance and polymorphism (virtual methods/properties, i.o.w.). In my `Octree` code, `OctreeNode` is a base class that does not store these values. Instead, derived classes with specializations for low color counts are used. See the code for more details. It can be optimized further, and I experimented with it, but the complexity grew quite quickly. The code quality here is not as good as I'd like it to be, but it does work and isn't too complicated.
 
 (Other approaches to solving this are also possible, such as using structs, pool allocators, and other clever ways of keeping track of sums and counts.)
 
