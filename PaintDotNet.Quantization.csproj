@@ -15,6 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="images\All24bitRGBcolors.png" />
+    <None Remove="images\cat.jpg" />
+    <None Remove="images\condo.JPG" />
+    <None Remove="images\mural.jpg" />
+    <None Remove="images\tesla.jpg" />
     <None Remove="IMG_0320.jpg" />
     <None Remove="IMG_0386.jpg" />
     <None Remove="IMG_0871.JPG" />
@@ -22,16 +27,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="IMG_0320.jpg">
+    <Content Include="images\All24bitRGBcolors.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="IMG_0386.jpg">
+    <Content Include="images\cat.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="IMG_0871.JPG">
+    <Content Include="images\condo.JPG">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="IMG_0918.jpg">
+    <Content Include="images\mural.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="images\tesla.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
