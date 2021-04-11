@@ -144,3 +144,4 @@ This can be ameliorated by using inheritance and polymorphism (virtual methods/p
 ### 7) Mapping colors to the palette is REALLY slow
 The previous sections went into detail fixing and optimizing the palette generation process. Once you have a palette, which is just an arbitrarily ordered <=256 length array of `ColorBgr24`s, you need to do something with it by applying it to the image itself.
 
+TODO: Write this up. For now, there's a summary (w/o pictures sadly) over on Twitter: https://twitter.com/rickbrewPDN/status/1379238853832155136
