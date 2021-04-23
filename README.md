@@ -150,7 +150,27 @@ This can be ameliorated by using inheritance and polymorphism (virtual methods/p
 (Other approaches to solving this are also possible, such as using structs, pool allocators, and other clever ways of keeping track of sums and counts.)
 
 ### 7) Mapping colors to the palette is REALLY slow
-The previous sections went into detail fixing and optimizing the palette generation process. Once you have a palette, which is just an arbitrarily ordered <=256 length array of `ColorBgr24`s, you need to do something with it by applying it to the image itself.
+The previous sections went into detail fixing and optimizing the palette generation process. Once you have a palette, which is just an arbitrarily ordered array of `ColorBgr24`s, you need to map the original image onto it.
+
+The algorithm for doing this is simple. For each pixel in the source image, find the color in the palette that is *closest* to it, and use that for the output image. "Closest" is usually defined as the Euclidean distance (https://en.wikipedia.org/wiki/Euclidean_distance) in three-dimensional RGB space. 
+
+> (NOTE: Quantization generally does *not* work with the alpha channel, hence why distance is calculated in RGB space and not RGBA space. There may be 1 palette slot that is fully transparent (i.e. #00000000). Not all image formats support this, but GIF and PNG do. Whether semi-transparent colors are mapped to fully transparent, or are first blended with white or something, is up to the application. In Paint.NET, the "alpha threshold" property is used to control this.)
+
+However, finding the closest palette color is not easily optimizable, and most code out out there uses a simple linear search. Other data structures, such as the K-d Tree (https://en.wikipedia.org/wiki/K-d_tree), seem very promising, but end up being very complicated to implement and do not map well to the things that perform well on modern CPUs: it has to jump all over memory, which negates caching, and there are lots of conditional branches that can't be reliably predicted.
+
+Usually a cache is layered on top of this approach, which allows for skipping the linear search, but *only* for colors that have already been seen before. The downside of this approach is that it can use a *lot* of memory in common cases. Also worth noting is that it is not easy to "prefetch" or "pre-fill" the cache ahead of time: quantization usually involves dithering, which means that many of the colors being mapped to the palette are not found in the source image (although they are usually "nearby").
+
+#### Introducing the Proximity Map
+
+I've come up with a combination of a simple data structure and a simple algorithm that has these benefits:
+
+1. It is much faster than the traditional linear search for images with many unique colors (millions of them)
+2. It is a bit faster than the traditional linear search for most other images
+3. I've not seen any case where it's slower (although it might be for very small palette sizes!)
+4. It's simple to implement and understand. There are no complicated data structures, it's just arrays, loops, and some basic algebra.
+5. The maximum memory usage is about 1 MiB of memory. Compared to linear search + caching, this can be a savings of 10s to 100s of megabytes.
+
+...
 
 
 
