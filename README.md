@@ -25,7 +25,7 @@ So, here are the changes I've made to ye ol' MSDN quantization code, in order fr
 
 ### 1) Right Shift Bug
 
-The first fix is an easy one. The MSDN code has a `GetColorIndex` method whose job is to provide the child node index for navigating down the octree. However, it has what is essentially a precision bug that causes colors to land in the wrong leaf nodes:
+The first fix is an easy one. The MSDN code has a `GetColorIndex` method whose job is to provide the child node index for a color while navigating down the octree. However, it has what is essentially a precision bug that causes colors to land in the wrong leaf nodes:
 
 ```
 private static int GetColorIndex(ref Rgba32 color, int level)
