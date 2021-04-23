@@ -76,15 +76,13 @@ private static ReadOnlySpan<byte> Mask => new byte[]
     0b1
 };
 ```
-I'm guessing that, like most people, when I integrated this code into my project I thought it was a bunch of complicated wizardry that I didn't have the patience to read through and fully comprehend. However, upon finally doing this thorough inspection, it's obvious that this is a lookup table for `(1 << (7-n))`, which definitely doesn't need a lookup table.
+I'm guessing that, like most people, when I integrated this code into my project I thought it was a bunch of complicated wizardry that I didn't have the patience to read through and fully comprehend. However, upon finally doing this thorough inspection, it's obvious that this is a lookup table for `(1 << (7-i))`, which definitely doesn't need a lookup table.
 
 So, kill the `Mask` and just compute the value when it's needed. We can even use `shift` because it already equals `(1 - level)`:
 
 ```
 private static int GetColorIndex(ref Rgba32 color, int level)
 {
-    DebugGuard.MustBeLessThan(level, Mask.Length, nameof(level));
-
     int shift = 7 - level;
     byte mask = (byte)(1 << shift)
     
