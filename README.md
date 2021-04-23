@@ -176,4 +176,4 @@ The 24-bit RGB color space, which is 256x256x256 in size, is divided up into cub
 
 
 
-TODO: Write this up. For now, there's a summary (w/o pictures sadly) over on Twitter: https://twitter.com/rickbrewPDN/status/1379238853832155136
+**TODO: Finish writing this up.** For now, there's a summary (w/o pictures sadly) over on Twitter: https://twitter.com/rickbrewPDN/status/1379238853832155136
