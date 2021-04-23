@@ -3,7 +3,7 @@
 
 This repository has the image quantization code from Paint.NET, along with the supporting utility and helper classes that are used along the way. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order to permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
 
-Please note that this is NOT intended to be used as a library or "nuget package" that you drop into your app and use as-is. You *can* do that (as per the license), but the code in this repository is meant for *integration*, not *linking.* As such, don't expect the public API surface to be beautiful or amazing or anything. Things like `IBitmapSource` and `IImagingFactory`, in particular, are mere shadows of their counterparts in the full Paint.NET source code.
+Please note that this is NOT intended to be used as a library or "nuget package" that you drop into your app and use as-is. You *can* do that (as per the license), but the code in this repository is meant for *integration*, not *linking.* As such, don't expect the public API surface to be beautiful or amazing, don't expect lots of attention given to Issues or especially Pull Requests. Things like `IBitmapSource` and `IImagingFactory`, in particular, are mere shadows of their counterparts in the full Paint.NET source code.
 
 ## Background
 
