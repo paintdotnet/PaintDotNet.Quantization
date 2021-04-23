@@ -1,15 +1,15 @@
 # PaintDotNet.Quantization
 **NOTE:** This is still pre-first draft! I'll update this to say final draft when it's all finished 🙂
 
-This repo has the image quantization code from Paint.NET, along with supporting classes. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
+This repository has the image quantization code from Paint.NET, along with the supporting utility and helper classes that are used along the way. Since images are always stored in-memory at 32-bit color depth (BGRA), quantization is necessary in order to permit saving images at 8-bit (or less) color depths. You can also use the Quantize effect (added in 4.2.16) to do this in-place (the image is still 32-bit BGRA, albeit using only up to 256 unique colors).
 
-Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimizing Color Quantization for ASP.NET Images_ (https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)). The code in the article has made its way into a number of projects besides Paint.NET, including ImageSharp (https://github.com/SixLabors/ImageSharp). 
-
-Unfortunately, it has a few bugs and quirks that this repository has fixes for. I recently dove in and completely gutted this code, making fixes and improvements, and I thought it would be useful to share this with everyone else.
+Please note that this is NOT intended to be used as a library or "nuget package" that you drop into your app and use as-is. You *can* do that (as per the license), but the code in this repository is meant for *integration*, not *linking.* As such, don't expect the public API surface to be beautiful or amazing or anything. Things like `IBitmapSource` and `IImagingFactory`, in particular, are mere shadows of their counterparts in the full Paint.NET source code.
 
 ## Background
 
-...
+Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimizing Color Quantization for ASP.NET Images_ (https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)). The code in the article has made its way into a number of projects besides Paint.NET, including ImageSharp (https://github.com/SixLabors/ImageSharp). 
+
+Unfortunately, it has a few bugs and quirks that this repository has fixes for. I recently dove in and completely gutted this code, making fixes and improvements, and I thought it would be useful to share this with everyone else. I've also optimized performance quite a lot, especially the code that maps from colors to palette entries (see section 7 below).
 
 So, here are the changes I've made, in order from simple to crazy:
 
