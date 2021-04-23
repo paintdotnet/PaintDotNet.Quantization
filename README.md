@@ -162,7 +162,7 @@ Usually a cache is layered on top of this approach, which allows for skipping th
 
 #### Introducing the Proximity Map
 
-I've come up with a combination of a simple data structure and a simple algorithm that has these benefits:
+I've come up with an approach that has these benefits:
 
 1. It is much faster than the traditional linear search for images with many unique colors (millions of them)
 2. It is a bit faster than the traditional linear search for most other images
