@@ -156,7 +156,7 @@ The algorithm for doing this is simple. For each pixel in the source image, find
 
 > (NOTE: Quantization generally does *not* work with the alpha channel, hence why distance is calculated in RGB space and not RGBA space. There may be 1 palette slot that is fully transparent (i.e. #00000000). Not all image formats support this, but GIF and PNG do. Whether semi-transparent colors are mapped to fully transparent, or are first blended with white or something, is up to the application. In Paint.NET, the "alpha threshold" property is used to control this.)
 
-However, finding the closest palette color is not easily optimizable, and most code out out there uses a simple linear search. Other data structures, such as the K-d Tree (https://en.wikipedia.org/wiki/K-d_tree), seem very promising, but end up being very complicated to implement and do not map well to the things that perform well on modern CPUs: it has to jump all over memory, which negates caching, and there are lots of conditional branches that can't be reliably predicted.
+However, finding the closest palette color is not easily optimizable, and most code out out there uses a simple linear search. Other data structures, such as the K-d Tree (https://en.wikipedia.org/wiki/K-d_tree), look very promising but end up complicated to implement and slower to execute. The latter is due to the traversal steps being complicated with lots of branch predictions and caches misses (discussion: https://github.com/SixLabors/ImageSharp/issues/1350#issuecomment-707249531).
 
 Usually a cache is layered on top of this approach, which allows for skipping the linear search, but *only* for colors that have already been seen before. The downside of this approach is that it can use a *lot* of memory in common cases. Also worth noting is that it is not easy to "prefetch" or "pre-fill" the cache ahead of time: quantization usually involves dithering, which means that many of the colors being mapped to the palette are not found in the source image (although they are usually "nearby").
 
@@ -164,13 +164,15 @@ Usually a cache is layered on top of this approach, which allows for skipping th
 
 I've come up with an approach that has these benefits:
 
-1. It is much faster than the traditional linear search for images with many unique colors (millions of them)
+1. It is much faster than the traditional linear search for images with *many* unique colors (millions of them)
 2. It is a bit faster than the traditional linear search for most other images
 3. I've not seen any case where it's slower (although it might be for very small palette sizes!)
-4. It's simple to implement and understand. There are no complicated data structures, it's just arrays, loops, and some basic algebra.
-5. The maximum memory usage is about 1 MiB of memory. Compared to linear search + caching, this can be a savings of 10s to 100s of megabytes.
+4. The maximum memory usage is about 1 MiB of memory. Compared to linear search + caching, this can be a savings of 10s to 100s of megabytes.
+5. It's simple to implement and understand. There are no complicated data structures, it's just arrays, loops, and some basic algebra.
 
-...
+Here's how it works:
+
+The 24-bit RGB color space, which is 256x256x256 in size, is divided up into cubes of size 16x16x16. There are, of course, 16x16x16 = 4,096 of these cubes.
 
 
 
