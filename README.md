@@ -96,7 +96,7 @@ This will save the static field access, pointer math, and memory dereference.
 
 ### 3) Octree.AddColor() is slow
 
-`Octree.AddColor()` is called once for every pixel in the image. The problem is, it's slow. It's not poorly written, it just requires a lot of jumping around to get its job done. When you have millions or even billions of colors in an image, it gets really bad.
+`Octree.AddColor()` is called once for every pixel in the image. The problem is, it's slow. It's not poorly written, it just requires a lot of jumping around to get its job done. When you have millions or even billions of pixels in an image, it gets really bad.
 
 I found it was much faster to pre-process the image and create a color histogram, essentially a `[color, count]` list, and amend `AddColor()` to take the count value. Then, each color is only sent down the octree once and performance is much better. Generating the histogram is also easily parallelizable, greatly improving performance on higher core count systems.
 
