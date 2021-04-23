@@ -11,7 +11,17 @@ Paint.NET's quantization code is based on an old MSDN article from 2003, _Optimi
 
 Unfortunately, it has a few bugs and quirks that this repository has fixes for. I recently dove in and completely gutted this code, making fixes and improvements, and I thought it would be useful to share this with everyone else. I've also optimized performance quite a lot, especially the code that maps from colors to palette entries (see section 7 below).
 
-So, here are the changes I've made, in order from simple to crazy:
+If you're new to quantization, here is some recommended reading:
+
+- **Optimizing Color Quantization for ASP.NET Images**, Microsoft -- https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/aa479306(v=msdn.10)
+- **Color quantization**, Wikipedia -- https://en.wikipedia.org/wiki/Color_quantization
+- **Octree** (data structure employed by this code), Wikipedia -- https://en.wikipedia.org/wiki/Octree
+- **Median Cut** (another algorithm often used for palette generation), Wikipedia -- https://en.wikipedia.org/wiki/Median_cut
+- **ImageSharp's Quantization code**, GitHub -- https://github.com/SixLabors/ImageSharp/tree/master/src/ImageSharp/Processing/Processors/Quantization
+
+## Discussion
+
+So, here are the changes I've made to ye ol' MSDN quantization code, in order from simple to crazy:
 
 ### 1) Right Shift Bug
 
@@ -108,29 +118,29 @@ More memory is required for this approach, but it's temporary, and is still quit
 
 ### 4) Exact palette size is not always achieved
 
-A problem with using the standard Octree quantization code is that the `Reduce()` method, on a per-node basis, is all or nothing. If you have reduced the octree down to 260 leaf nodes, and you're reducing a node that has 8 children, the color count will be reduced by 7. You'll end up with 253 colors instead of 256. This is *very* common in practice.
+A problem with using the standard Octree quantization code is that the `Reduce()` method, on a per-node basis, is all or nothing. If you have reduced the octree down to 260 leaf nodes and you're reducing a node that has 8 children, the color count will be reduced by 7. You'll end up with 253 colors instead of 256. This is *very* common in practice.
 
-I found a CodeProject article by someone who figured out a way to fix this: https://www.codeproject.com/Articles/109133/Octree-Color-Palette. Search for "Merging for Exact Colors Count".
+I found a CodeProject article by someone who figured out a way to fix this: https://www.codeproject.com/Articles/109133/Octree-Color-Palette. Search for "Merging for Exact Colors Count."
 
-The code here in this repo doesn't use this approach because the next section fixes both this and another problem. However, if you're looking to ease into all of these fixes one-at-a-time, you don't need to skip this one before tackling the next section (which is much more complicated to implement).
+The code in this repo doesn't use this approach because the next section fixes both this and another problem. If you're looking to ease into all of these fixes one-at-a-time, you don't need to skip this one before tackling the next section (which is much more complicated to implement). I also include this in the discussion because it was a critical point in my learning and discovery process for working with the quantization code.
 
 ### 5) Colors are unevenly reduced
 
-The MSDN code makes use of a `reducibleNodes` array that is built while populating the Octree. It's essentially a 2D jagged list of all the nodes in the octree: the first index is the level, with the second index being an unordered (in principal anyway) list of the nodes at that level. *(Note that it is not actually a 2D jagged list! It's an array of references to the first node in the list, and then the nodes themselves form a linked list by way of their `NextReducible` property. Yuck!)*
+The MSDN code makes use of a `reducibleNodes` array that is built while populating the Octree. It's essentially a 2D jagged list of all the nodes in the octree: the first index is the level of the octree (zero being just the root node), with the second index being an unordered (in principal anyway) list of the nodes at that level. *(Note that it is not actually a 2D jagged list! It's an array of references to the first node in the list, and then the nodes themselves form a linked list by way of their `NextReducible` property. Yuck!)*
 
-In practice, however, the list's ordering is important to the overall quality of the palette. The second level of that list is filled in as you call `AddColor()`, which means that the final stages of the reduction process will prefer to merge colors that were added last; those that first appeared toward the bottom of the image, in other words, assuming the image is processed top-to-bottom.
+In practice, however, the list's ordering is important to the overall quality of the palette. The second level of that list is filled in as you call `AddColor()`, with new nodes being inserted at the head of the linked list. This means that the final stages of the reduction process will prefer to merge colors that were added last; those that first appeared toward the bottom of the image, in other words, assuming the image is processed top-to-bottom.
 
 To fix this, I changed the reduction algorithm somewhat. See `OctreeQuantizer::Octree::Reduce()` for the implementation.
 
-I removed the `reducibleNodes` list and `NextReducible` property, opting instead to traverse the octree when I need to count or gather nodes (the alternative was extra bookkeeping fields and it got very complicated/buggy). The octree is, as usual, reduced from bottom to top. However, after each level is completely reduced, I look at the number of nodes in the last and last-1 levels. Once the last level has more nodes than the target color count, but the last-1 level has less than or equal, I break out of the loop and switch to the final stage of reduction.
+I removed the `reducibleNodes` list and `NextReducible` property, opting instead to traverse the octree when I need to count or gather nodes (the alternative was extra bookkeeping fields and it got very complicated/buggy). The octree is, as usual, reduced from bottom to top. However, after each level is completely reduced (and therefore removed), I look at the number of nodes in the last and last-1 levels. Once the last level has more nodes than the target color count, but the last-1 level has less than or equal, I break out of the loop and switch to the final stage of reduction.
 
-In the final stage of reduction, all of the leaf nodes are gathered into a list and sorted by their weight (`pixelCount`). Nodes with the lowest weight, which store information about colors that were seen less often in the image, are reduced first. Because many nodes could have the same weight, tie-breaking for the sort order is done by comparing the hash code of the node's output color at high precision (32-bit floating point per component). This is done via the `ColorRgb96Float` struct in this repo's code.
+In the final stage of reduction, all of the leaf nodes are gathered into a list and then sorted by their weight (`pixelCount`). The order of this list then establishes the priority ordering for node reduction. Nodes with the lowest weight, which store information about colors that were seen less often in the image, are reduced first. Because many nodes could have the same weight, tie-breaking for the sort order is done by comparing the hash code of the node's output color at high precision (32-bit floating point per component). This is done via the `ColorRgb96Float` struct in this repo's code.
 
-Using the hash code achieves a pseudo-random balancing to the order that nodes are reduced. I contemplated other balancing methods, but ultimately nothing was satisfactory. Using the hash code has some benefits, especially around being straightforwardly portable to other platforms, languages, compilers, and not being dependent on an opaque random number generator.
+Using the hash code achieves a pseudo-random but *deterministic* balancing to the order that nodes are reduced. I contemplated other balancing methods, but ultimately nothing was satisfactory. Using the hash code has some benefits, especially around being straightforwardly portable to other platforms, languages, compilers, and not being dependent on an opaque random number generator (i.e. if you shuffled the list instead of sorting it).
 
-I'm not fully convinced that reducing low-weight nodes first is the best approach, nor that using the color's hash code for tie-breaking the sort order is. However, it's a simple approach that is easy to change and experiment with, and it does produce good looking results.
+I'm not fully convinced that reducing low-weight nodes first is the best approach, nor that using the color's hash code for tie-breaking the sort order is. However, it's a simple approach that is easy to change and experiment with, and it does produce great looking results.
 
-**Note** that there is another change you must understand for this section. Nodes in an Octree are usually classified as just interior and leaf, with leaf nodes emitting colors after the octree is reduced and the palette is finally built. However, we must introduce an extra flag here: does the node have color information? Rather, can it produce a color? (normally the answer is yes for leaves, no for interior nodes) Because we are partially reducing nodes during the final stage of reduction, we will have non-leaf nodes that store color information about their children that were reduced, even if some children are still around. We are not reducing all-at-once, in other words. These nodes will emit a color when building the palette, as will their (leaf) children. This is encapsulated by the `OctreeNode.HasColorInfo` property.
+**Note** that there is another change you must understand for this section. Nodes in an Octree are usually classified as *interior* or *leaf*, with leaf nodes emitting colors after the octree is reduced and the palette is finally built. However, we must introduce an extra flag here: does the node have color information? Rather, can it emit a color? (normally the answer is yes for leaves, no for interior nodes) Because we are partially reducing nodes during the final stage of reduction, we will have non-leaf (interior) nodes that store color information about their children that were reduced, even if some of the children are still present. We are not reducing all-at-once, in other words. These nodes will emit a color when building the palette, as will their children (which are leaves). This is encapsulated by the `OctreeNode.HasColorInfo` property.
 
 ### 6) Leaf nodes take up a ton of memory
 If you're using 32-bit integers to store color sums and counts, like the MSDN article does, your `OctreeNode` will consume 40 bytes plus object/allocation overhead. If you're using 64-bit integers for sums and counts, this goes way up to around 56 bytes. If the image being processed has 500,000 unique colors, the total here is 20MB for 32-bit and 28MB for 64-bit. For a "worst" case image, with all 2^24 RGB colors, this balloons to 671MB and 939MB.
@@ -141,5 +151,7 @@ This can be ameliorated by using inheritance and polymorphism (virtual methods/p
 
 ### 7) Mapping colors to the palette is REALLY slow
 The previous sections went into detail fixing and optimizing the palette generation process. Once you have a palette, which is just an arbitrarily ordered <=256 length array of `ColorBgr24`s, you need to do something with it by applying it to the image itself.
+
+
 
 TODO: Write this up. For now, there's a summary (w/o pictures sadly) over on Twitter: https://twitter.com/rickbrewPDN/status/1379238853832155136
