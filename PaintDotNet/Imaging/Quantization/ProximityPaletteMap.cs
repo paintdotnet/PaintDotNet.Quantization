@@ -80,6 +80,9 @@ namespace PaintDotNet.Imaging.Quantization
                 {
                     // If this color is closer, take it
                     closestIndex = colorIndex;
+#if DEBUG
+                    closest = Unsafe.Add(ref opaqueColors0, closestIndex);
+#endif
                     dTargetToClosest2 = dTargetToColor2;
                     dTargetToClosest = null;
                 }
@@ -96,16 +99,31 @@ namespace PaintDotNet.Imaging.Quantization
                     float dCenterToColor = MathF.Sqrt(dCenterToColor2);
 
                     float dTargetToColorRing = MathF.Abs(dCenterToTarget - dCenterToColor);
-                    dTargetToClosest ??= MathF.Sqrt(dTargetToClosest2);
+                    float dTargetToClosest0 = MathF.Sqrt(dTargetToClosest2);
 
-                    if (dTargetToColorRing > dTargetToClosest)
+                    // We don't need to stop at the perfect stopping point, but we do need to give the right answer
+                    // If we compare normally, we can hit the limits of floating-point precision, and an image with
+                    // a lossless palette (e.g. <N colors with an >=N requested palette size) could end up with
+                    // error and dithering.
+                    // See this issue reported for Paint.NET v4.2.16: https://forums.getpaint.net/topic/118401-images-already-with-256-or-fewer-colors-being-dithered-when-saved-with-palette/
+                    if (LowPrecisionIsGreaterThan(dTargetToColorRing, dTargetToClosest0))
                     {
-                        break;
+                        return closestIndex;
                     }
+
+                    dTargetToClosest = dTargetToClosest0;
                 }
             }
 
             return closestIndex;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool LowPrecisionIsGreaterThan(float a, float b)
+        {
+            const float divBy1024 = 1.0f / 1024f;
+            float aeps = a * divBy1024;
+            return (a - b) > aeps;
         }
 
         private byte[] GetPaletteIndicesFromProximityMap(ColorBgr24 color, out ColorBgr24 centerPt)
