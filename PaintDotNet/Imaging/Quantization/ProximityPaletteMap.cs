@@ -63,12 +63,12 @@ namespace PaintDotNet.Imaging.Quantization
             ref byte paletteIndices0 = ref paletteIndices[0];
 
             int dCenterToTarget2 = ColorBgr24Util.GetDistanceSquared(centerPt, target);
-            double dCenterToTarget = Math.Sqrt(dCenterToTarget2);
+            float dCenterToTarget = MathF.Sqrt(dCenterToTarget2);
 
             byte closestIndex = paletteIndices0;
             ColorBgr24 closest = Unsafe.Add(ref opaqueColors0, closestIndex);
             int dTargetToClosest2 = ColorBgr24Util.GetDistanceSquared(target, closest);
-            double? dTargetToClosest = null;
+            float? dTargetToClosest = null;
 
             for (int i = 1; i < paletteIndicesLength; ++i)
             {
@@ -93,10 +93,10 @@ namespace PaintDotNet.Imaging.Quantization
                     // and the distance from target to the rings will decrease and then increase as we enumerate colors
                     // via paletteIndices. Once a ring is farther away than the closest color we've seen, we're done.
                     int dCenterToColor2 = ColorBgr24Util.GetDistanceSquared(centerPt, color);
-                    double dCenterToColor = Math.Sqrt(dCenterToColor2);
+                    float dCenterToColor = MathF.Sqrt(dCenterToColor2);
 
-                    double dTargetToColorRing = Math.Abs(dCenterToTarget - dCenterToColor);
-                    dTargetToClosest ??= Math.Sqrt(dTargetToClosest2);
+                    float dTargetToColorRing = MathF.Abs(dCenterToTarget - dCenterToColor);
+                    dTargetToClosest ??= MathF.Sqrt(dTargetToClosest2);
 
                     if (dTargetToColorRing > dTargetToClosest)
                     {
