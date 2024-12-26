@@ -1,9 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Environments;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Running;
-using PaintDotNet.Imaging;
+﻿using PaintDotNet.Imaging;
 using PaintDotNet.Imaging.Quantization;
 using System;
 using System.IO;
